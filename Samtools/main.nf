@@ -1,17 +1,35 @@
 #!/usr/bin/env nextflow
-
-bamfile = Channel.fromPath("/mnt/c/Users/abc/Desktop/Nextflow/samtools/docker/*.bam")
+nextflow.enable.dsl=2
 
 process SAMTOOLS_VIEW {
+ publishDir 'results'
   input:
-  path query_file from bamfile
+  path bamfile
 
   output:
-  path query_file into samfile
+  path ("*.sam"), emit: samfile
+
+ script:
 
  """
   samtools view -h example.bam > example.bam.sam
  """
 }  
 
-samfile.view {"$it"}
+
+workflow SAMTOOLS_VIEW_WF {
+  take:
+      ch_bamfile
+  main:
+      SAMTOOLS_VIEW (
+         ch_bamfile
+                  )
+ 
+ emit: 
+     samfile = SAMTOOLS_VIEW.out.samfile
+}            
+
+workflow {
+  ch_bamfile = Channel.fromPath("/mnt/c/Users/abc/Desktop/Nextflow/samtools/docker/example.bam")
+  SAMTOOLS_VIEW(ch_bamfile)
+}
